@@ -1,0 +1,83 @@
+services:
+  gluetun:
+    image: docker.io/qmcgaw/gluetun:latest
+    container_name: gluetun
+    user: "0:0"
+    cap_add:
+      - NET_ADMIN
+    ports:
+      # add necessray port of the service connected to gluetun
+      - "8080:8080" # qbittorrent port
+      - "9696:9696" # prowlarr port
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=$WIREGUARD_PRIVATE_KEY
+      - SERVER_COUNTRIES=$WIREGUARD_COUNTRY
+      - FIREWALL_OUTBOUND_SUBNETS=172.20.0.0/16,192.168.0.0/24
+    volumes:
+      - $STACK_DIR/data/gluetun/info:/tmp/gluetun:z
+      - $STACK_DIR/data/gluetun:/gluetun:z
+
+  tailscale:
+    image: tailscale/tailscale
+    container_name: tailscale
+    user: "0:0"
+    volumes:
+      - $STACK_DIR/data/tailscale/var/lib:/var/lib:z
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+    environment:
+      - TS_AUTHKEY=$TAILSCALE_AUTH_KEY
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    user: "0:0"
+    ports:
+      - "9000:9000"
+      - 9443:9443
+      - 8000:8000
+    volumes:
+      - $STACK_DIR/data/portainer:/data:z
+      - $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock:z
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    network_mode: host
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=$CLOUDFLARE_TUNNEL_TOKEN
+    volumes:
+      - $STACK_DIR/data/cloudflared:/etc/cloudflared:z
+
+  glances:
+    image: nicolargo/glances:latest
+    container_name: glances
+    ports:
+      - "61208:61208"
+    environment:
+      - GLANCES_OPT=-w
+    volumes:
+      - $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock:z
+    restart: unless-stopped
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    ports:
+      - "3003:3001"
+    volumes:
+      - $STACK_DIR/data/uptime-kuma/data:/app/data
+      - $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock:z
+    restart: unless-stopped

@@ -1,0 +1,23 @@
+
+services:
+  jellyfin:
+    image: docker.io/jellyfin/jellyfin:latest
+    container_name: jellyfin
+    user: 0:0
+    group_add:
+      - "105"
+      - "104"
+      - "39"
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/card0:/dev/dri/card0
+    ports:
+      - "8096:8096"
+      - "8920:8920"
+    environment:
+      - JELLYFIN_FFMPEG=/usr/lib/jellyfin-ffmpeg/ffmpeg
+      - TZ=Asia/Jakarta
+    volumes:
+      - $STACK_DIR/data/jellyfin/config:/config:z
+      - $STACK_DIR/data/jellyfin/cache:/cache:z
+      - $JELLYFIN_MEDIA_DIR:/media:z

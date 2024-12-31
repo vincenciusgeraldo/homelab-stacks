@@ -1,0 +1,63 @@
+services:
+  samba:
+    image: dperson/samba
+    container_name: samba
+    environment:
+      - TZ=Asia/Jakarta
+      - USERID=0
+      - GROUPID=0
+      - WORKGROUP=Homeserver
+    ports:
+      - "137:137/udp"
+      - "138:138/udp"
+      - "139:139/tcp"
+      - "445:445/tcp"
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - '$SAMBA_PATH:/mnt:z'
+    command: >
+      -s "Home Server Data;/mnt;yes;no;no;$SAMBA_USER;'none';'none';'Homeserver'"
+      -u "$SAMBA_USER;$SAMBA_PASSWORD"
+      -g "vfs objects = catia fruit streams_xattr"
+      -g "fruit:model = MacSamba"
+      -g "fruit:metadata = stream"
+      -g "fruit:resource = file"
+      -g "fruit:encoding = native"
+      -g "ea support = yes"
+
+  ntfy:
+    image: binwiederhier/ntfy
+    container_name: ntfy
+    command:
+      - serve
+    environment:
+      TZ: Asia/jakarta
+      NTFY_UPSTREAM_BASE_URL: https://ntfy.sh
+      NTFY_BASE_URL: $NTFY_BASE_URL
+    user: 0:0
+    volumes:
+      - $STACK_DIR/data/ntfy/var/cache/ntfy:/var/cache/ntfy
+      - $STACK_DIR/data/ntfy/etc/ntfy:/etc/ntfy
+    ports:
+      - 8010:80
+    healthcheck: # optional: remember to adapt the host:port to your environment
+        test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:80/v1/health -O - | grep -Eo '\"healthy\"\\s*:\\s*true' || exit 1"]
+        interval: 60s
+        timeout: 10s
+        retries: 3
+        start_period: 40s
+    restart: unless-stopped
+
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    ports:
+      - "7575:7575"
+    volumes:
+      - $STACK_DIR/data/homarr/configs:/app/data/configs:z
+      - $STACK_DIR/data/homarr/icons:/app/public/icons:z
+      - $STACK_DIR/data/homarr/data:/data:z
