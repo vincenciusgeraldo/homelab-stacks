@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=~/homelab-stacks
-ExecStart=start-docker-compose.sh
+WorkingDirectory=/home/geraldo/homelab-stacks
+ExecStart=/home/geraldo/homelab-stacks/start-docker-compose.sh
 
 [Install]
 WantedBy=default.target
