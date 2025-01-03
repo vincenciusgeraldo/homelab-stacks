@@ -26,7 +26,7 @@ services:
     container_name: tailscale
     user: "0:0"
     volumes:
-      - $STACK_DIR/data/tailscale/var/lib:/var/lib:z
+      - $STACK_DIR/data/tailscale:/var/lib/tailscale:z
     devices:
       - /dev/net/tun:/dev/net/tun
     network_mode: host
@@ -36,6 +36,7 @@ services:
     restart: unless-stopped
     environment:
       - TS_AUTHKEY=$TAILSCALE_AUTH_KEY
+      - TS_STATE_DIR=/var/lib/tailscale/ 
 
   portainer:
     image: portainer/portainer-ce:latest
@@ -61,17 +62,6 @@ services:
     volumes:
       - $STACK_DIR/data/cloudflared:/etc/cloudflared:z
 
-  glances:
-    image: nicolargo/glances:latest
-    container_name: glances
-    ports:
-      - "61208:61208"
-    environment:
-      - GLANCES_OPT=-w
-    volumes:
-      - $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock:z
-    restart: unless-stopped
-
   uptime-kuma:
     image: louislam/uptime-kuma:latest
     container_name: uptime-kuma
@@ -81,3 +71,23 @@ services:
       - $STACK_DIR/data/uptime-kuma/data:/app/data
       - $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock:z
     restart: unless-stopped
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    user: "0:0"
+    volumes:
+      - $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock
+    ports:
+      - 8030:8080
+
+  dash:
+    image: mauricenino/dashdot:latest
+    container_name: dashdot
+    restart: unless-stopped
+    privileged: true
+    user: "0:0"
+    ports:
+      - '3001:3001'
+    volumes:
+      - /:/mnt/host:ro

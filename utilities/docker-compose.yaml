@@ -38,9 +38,16 @@ services:
       TZ: Asia/jakarta
       NTFY_UPSTREAM_BASE_URL: https://ntfy.sh
       NTFY_BASE_URL: $NTFY_BASE_URL
+      NTFY_CACHE_FILE: /var/lib/ntfy/cache.db
+      NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
+      NTFY_AUTH_DEFAULT_ACCESS: deny-all
+      NTFY_BEHIND_PROXY: true
+      NTFY_ATTACHMENT_CACHE_DIR: /var/lib/ntfy/attachments
+      NTFY_ENABLE_LOGIN: true
     user: 0:0
     volumes:
       - $STACK_DIR/data/ntfy/var/cache/ntfy:/var/cache/ntfy
+      - $STACK_DIR/data/ntfy/var/lib/ntfy:/var/lib/ntfy
       - $STACK_DIR/data/ntfy/etc/ntfy:/etc/ntfy
     ports:
       - 8010:80
@@ -61,3 +68,14 @@ services:
       - $STACK_DIR/data/homarr/configs:/app/data/configs:z
       - $STACK_DIR/data/homarr/icons:/app/public/icons:z
       - $STACK_DIR/data/homarr/data:/data:z
+
+  wakapi:
+    image: ghcr.io/muety/wakapi:latest
+    container_name: wakapi
+    user: 0:0
+    ports:
+      - "3070:3000"
+    environment:
+      - WAKAPI_PASSWORD_SALT=$WAKAPI_PASSWORD_SALT
+    volumes:
+      - $STACK_DIR/data/wakapi:/data

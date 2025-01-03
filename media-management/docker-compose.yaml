@@ -35,6 +35,7 @@ services:
       - PGID=0
       - TZ=Asia/Jakarta
       - PUID=0
+      - DOCKER_MODS=ghcr.io/vuetorrent/vuetorrent-lsio-mod:latest
     volumes:
       - $MEDIA_PATH/torrents:/downloads:z
       - $STACK_DIR/data/qbittorrent:/config:z
